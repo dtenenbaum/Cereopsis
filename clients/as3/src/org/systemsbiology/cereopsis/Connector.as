@@ -10,7 +10,7 @@ package org.systemsbiology.cereopsis
 	import flash.system.Security;
 	
 	import mx.controls.Alert;
-	import mx.utils.UIDUtil;
+	import mx.utils.UIDUtil; 
 	
 	import org.codehaus.stomp.Stomp;
 	import org.codehaus.stomp.event.ConnectedEvent;
@@ -68,21 +68,21 @@ package org.systemsbiology.cereopsis
 				addEventListener(SecurityErrorEvent.SECURITY_ERROR, errorHandler);
 
 
-				var sock:Socket = new Socket();
-				try {
-					sock.connect("127.0.0.1", 61613);
-				} catch (e) {
-					Alert.show("your sock is dirty", "title");
-				}
+				trace("before lpf");
+				Security.loadPolicyFile("xmlsocket://127.0.0.1:9876");
+				trace("after lpf");
 
+
+				var sock:Socket = new Socket();
+				sock.addEventListener(IOErrorEvent.NETWORK_ERROR, errorHandler);
+				sock.addEventListener(IOErrorEvent.IO_ERROR, errorHandler);
+				sock.addEventListener(ErrorEvent.ERROR, errorHandler);
+				sock.addEventListener(SecurityErrorEvent.SECURITY_ERROR, errorHandler);
+
+				sock.connect("127.0.0.1", 61613);
 				if (true) return;
 
 
-				try {
-					Security.loadPolicyFile("xmlsocket://127.0.0.1:9876");
-				} catch (e) {
-					Alert.show("loadPolicyFile failed","title");
-				}
 
 
 
@@ -134,7 +134,8 @@ package org.systemsbiology.cereopsis
 		}
 		
 		private function errorHandler(event:ErrorEvent):void {
-			Alert.show("in error handler", "title");
+			trace("in error handler: " + event.text)
+			Alert.show("in error handler: " + event.text, "title");
 		}
 		
     	private function log(msg:String):void {
