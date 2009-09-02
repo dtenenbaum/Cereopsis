@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:Application xmlns:mx="http://www.adobe.com/2006/mxml" layout="absolute" creationComplete="init()" pageTitle="Cereopsis">
+	<mx:Label x="92" y="106" text="Console:"/>
+	
+	<mx:Script>
+		<![CDATA[
+			import org.codehaus.stomp.headers.SendHeaders;
+			import mx.collections.ArrayCollection;
+			import org.systemsbiology.cereopsis.Connector;
+			import org.systemsbiology.cereopsis.events.LoggingEvent;
+			
+			private var connector:Connector;
+			
+			[Bindable]
+            public var topics:ArrayCollection = new ArrayCollection(
+                [ {label:"Broadcast", data:1}, 
+                  {label:"Admin", data:2}, 
+                  {label:"Boss", data:3},
+                  {label:"Legacy", data:4} ]);
+		
+			private function init():void {
+				trace("here we are");
+				connector = new Connector();
+				connector.connect("omniscientNarrator");
+				
+				connector.addEventListener(LoggingEvent.LOGGING_EVENT, function(event:LoggingEvent):void {
+				//trace(event.logEntry);
+				log(event.logEntry);
+			    });
+
+			}
+			
+			private function clearConsole():void {
+				consoleTextArea.text = "";
+			}
+			
+			
+			private function log(message:String):void {
+				consoleTextArea.text += message;
+				consoleTextArea.text += "\n";
+			}
+			
+			private function sendData():void {
+				var payload:String = dataTextArea.text;
+				var headerLines:Array = headersTextArea.text.split("\n");
+				var headers:SendHeaders = new SendHeaders();
+				for each (var line:String in headerLines) {
+					var temp:Array = line.split(":");
+					headers.addHeader(temp[0], temp[1]);
+				}
+				connector.sendData(targetTopicComboBox.selectedItem.label, headers, payload);
+			}
+			
+			private function sendNamelist():void {
+				var names:Object = ["name1", "name2", "name3"];
+				connector.sendNamelist(names);
+			}
+			
+			private function sendMatrix():void {
+				
+			}
+			
+			private function sendCluster():void {
+				
+			}
+			
+			private function sendNetwork():void {
+				
+			}
+			
+			
+		]]>
+	</mx:Script>
+	<mx:TextArea x="92" y="132" width="368" height="380" id="consoleTextArea"/>
+	<mx:Button x="92" y="532" label="Clear Console" click="clearConsole()"/>
+	<mx:Label x="511" y="106" text="Headers:"/>
+	<mx:TextArea x="511" y="132" width="516" height="139" id="headersTextArea"/>
+	<mx:ComboBox x="570" y="532" id="targetTopicComboBox" dataProvider="{topics}"></mx:ComboBox>
+	<mx:Label x="511" y="534" text="To:"/>
+	<mx:Button x="514" y="573" label="Send" id="sendButton" click="sendData()"/>
+	<mx:TextArea x="511" y="313" width="516" height="199" id="dataTextArea"/>
+	<mx:Label x="511" y="279" text="Data:"/>
+	<mx:Button x="92" y="654" label="Send Namelist" id="sendNamelistButton" click="sendNamelist()"/>
+	<mx:Button x="207" y="654" label="Send Matrix" id="sendMatrixButton" click="sendMatrix()"/>
+	<mx:Button x="308" y="654" label="Send Cluster" id="sendClusterButton" click="sendCluster()"/>
+	<mx:Button x="413" y="654" label="Send Network" id="sendNetworkButton" click="sendNetwork()"/>
+	<mx:Button x="535" y="654" label="Send Tuple" enabled="false"/>
+	
+	
+</mx:Application>
