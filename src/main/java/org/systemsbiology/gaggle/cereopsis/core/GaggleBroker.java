@@ -1,9 +1,10 @@
 package org.systemsbiology.gaggle.cereopsis.core;
 
 import org.apache.activemq.broker.BrokerService;
+import org.systemsbiology.gaggle.cereopsis.policy.PolicyServer;
 
-import javax.swing.*;/*
-* Copyright (C) 2007 by Institute for Systems Biology,
+/*
+* Copyright (C) 2009 by Institute for Systems Biology,
 * Seattle, Washington, USA.  All rights reserved.
 *
 * This source code is distributed under the GNU Lesser
@@ -13,20 +14,46 @@ import javax.swing.*;/*
 
 public class GaggleBroker {
 
-    public static void main(String[] args) {
+    private BrokerService broker;
+    private PolicyServer policyServer;
+
+
+    public GaggleBroker() {
+        broker = new BrokerService();
+        policyServer = new PolicyServer(9876);
+
+
+    }
+
+    public void startBroker() {
         try {
-            BrokerService broker = new BrokerService();
             broker.setUseJmx(true);
             broker.addConnector("tcp://localhost:61616");
             broker.addConnector("stomp://localhost:61613");
             broker.start();
 
-            // todo start policy server
-            // todo add log4j and send log message that broker has started
+            policyServer.start();
+
+            // todo add log4j and send log message that broker and policy server have started
         } catch (Exception e) {
             e.printStackTrace();
         }
 
     }
+
+    public void stopBroker() {
+        policyServer.stopPolicyServer();
+        try {
+            broker.stop();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+
+    public static void main(String[] args) {
+        new GaggleBroker().startBroker();
+    }
+
 
 }
