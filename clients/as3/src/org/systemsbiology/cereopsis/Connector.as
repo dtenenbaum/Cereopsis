@@ -17,6 +17,7 @@ package org.systemsbiology.cereopsis
 	import org.codehaus.stomp.event.MessageEvent;
 	import org.codehaus.stomp.headers.ConnectHeaders;
 	import org.codehaus.stomp.headers.SendHeaders;
+	import org.codehaus.stomp.headers.SubscribeHeaders;
 	import org.systemsbiology.cereopsis.events.LoggingEvent;
 	import org.systemsbiology.cereopsis.events.ReceivedClusterEvent;
 	import org.systemsbiology.cereopsis.events.ReceivedGooseNameEvent;
@@ -44,6 +45,7 @@ package org.systemsbiology.cereopsis
 		private var sessionId:String;
 		
 		public var gooseName:String;
+		public var gooseNames:Array;
 		
 		private var uid:String;
 		
@@ -65,6 +67,7 @@ package org.systemsbiology.cereopsis
 			stomp.addEventListener(ConnectedEvent.CONNECTED, function(event:ConnectedEvent):void {
 				sessionId = stomp.sessionID;
 				log("Connected: this goose has the unique ID: " + sessionId);  
+				getGooseNames();
 			});
 				
 		    var ch: ConnectHeaders = new ConnectHeaders();
@@ -93,10 +96,11 @@ package org.systemsbiology.cereopsis
 			
 			stomp.connect("127.0.0.1", 61613, ch);//you have to say 127.0.0.1 instead of localhost--and/or match what you say in Security.loadPolicyFile()
 			
+			var subscribeHeaders:SubscribeHeaders = new SubscribeHeaders();
+			subscribeHeaders.addHeader(SubscribeHeaders.AMQ_NO_LOCAL, true);
+			stomp.subscribe("/topic/Broadcast", subscribeHeaders);
 			
-			stomp.subscribe("/topic/Broadcast");
-			
-			getGooseNames();
+			//getGooseNames();
 			
 			
 			stomp.addEventListener(MessageEvent.MESSAGE, function(event:MessageEvent):void {
@@ -132,12 +136,14 @@ package org.systemsbiology.cereopsis
 					matrixEvent.matrix = matrix;
 					dispatchEvent(matrixEvent);
 				} else if (event.message.headers["MessageType"] && event.message.headers["MessageType"] == "GooseList") {
-					var gooseList:Object = JSON.decode(event.message.body.toString());
+					var tmpObj:Object = JSON.decode(event.message.body.toString());
+					gooseNames = tmpObj['GooseList'];
 					var gooseListEvent:UpdatedGooseListEvent = new UpdatedGooseListEvent(UpdatedGooseListEvent.UPDATED_GOOSE_LIST_EVENT);
-					gooseListEvent.gooseNames = gooseList;
+					gooseListEvent.gooseNames = gooseNames;
 					dispatchEvent(gooseListEvent);
 				} else if (event.message.headers["MessageType"] && event.message.headers["MessageType"] == "GooseName") {
-					gooseName = event.message.body.toString();
+					var tmp:Object = JSON.decode(event.message.body.toString());
+					gooseName =  tmp['GooseName'];
 					var gotGooseNameEvent:ReceivedGooseNameEvent = new ReceivedGooseNameEvent(ReceivedGooseNameEvent.RECEIVED_GOOSE_NAME_EVENT);
 					gotGooseNameEvent.gooseName = gooseName;
 					dispatchEvent(gotGooseNameEvent);
@@ -150,7 +156,8 @@ package org.systemsbiology.cereopsis
 			trace("in getGooseNames()");
 			var sendHeaders:SendHeaders = new SendHeaders();
 			sendHeaders.addHeader("MessageType", "RequestGooseName");
-			sendData(sendHeaders," ");
+			var dummyObject:Object = {"dummy": "value"};
+			sendData(sendHeaders, JSON.encode(dummyObject));
 		}
 		
 		private function errorHandler(event:ErrorEvent):void {
@@ -184,6 +191,40 @@ package org.systemsbiology.cereopsis
 				Alert.show("Goose and/or boss have gone away. Restart them and (possibly) refresh this page. Working on more graceful approach.", "Error");
 			}
 		}
+		
+		public function sendNetwork(network:Object):void {
+			var sendHeaders:SendHeaders = new SendHeaders();
+			var networkJson:String = JSON.encode(network);
+			sendHeaders.addHeader("MessageType", "Network");
+			try {
+				stomp.sendTextMessage("/topic/Broadcast", networkJson, sendHeaders);
+			} catch (e:Error) {
+				Alert.show("Goose and/or boss have gone away. Restart them and (possibly) refresh this page. Working on more graceful approach.", "Error");
+			}
+		}
+		
+		public function sendMatrix(matrix:Object):void {
+			var sendHeaders:SendHeaders = new SendHeaders();
+			var matrixJson:String = JSON.encode(matrix);
+			sendHeaders.addHeader("MessageType", "DataMatrix");
+			try {
+				stomp.sendTextMessage("/topic/Broadcast", matrixJson, sendHeaders);
+			} catch (e:Error) {
+				Alert.show("Goose and/or boss have gone away. Restart them and (possibly) refresh this page. Working on more graceful approach.", "Error");
+			}
+		}
+		
+		public function sendCluster(cluster:Object):void {
+			var sendHeaders:SendHeaders = new SendHeaders();
+			var clusterJson:String = JSON.encode(cluster);
+			sendHeaders.addHeader("MessageType", "Cluster");
+			try {
+				stomp.sendTextMessage("/topic/Broadcast", clusterJson, sendHeaders);
+			} catch (e:Error) {
+				Alert.show("Goose and/or boss have gone away. Restart them and (possibly) refresh this page. Working on more graceful approach.", "Error");
+			}
+		}
+		
 
 	}
 }

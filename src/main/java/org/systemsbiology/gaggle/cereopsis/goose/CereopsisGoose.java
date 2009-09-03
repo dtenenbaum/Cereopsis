@@ -40,12 +40,6 @@ public class CereopsisGoose extends JFrame implements Goose, WindowListener {
         addWindowListener(this);
         MiscUtil.setApplicationIcon(this);
 
-        try {
-            connectToGaggle();
-        }
-        catch (Exception ex0) {
-            System.err.println("CereopsisGoose failed to connect to gaggle: " + ex0.getMessage());
-        }
         JPanel panel = new JPanel();
         JLabel label = new JLabel("Cereopsis Goose is running");
         panel.add(label);
@@ -54,7 +48,13 @@ public class CereopsisGoose extends JFrame implements Goose, WindowListener {
         setVisible(true);
 
         broker = new GaggleBroker();
-        broker.startBroker();
+        try {
+            broker.startBroker();
+        } catch (Exception e) {
+            JOptionPane.showMessageDialog(this, "Message Broker Already In Use");
+            System.exit(0);
+
+        }
         TopicListener topicListener = new TopicListener(this);
         producer = new GaggleProducer();
 
@@ -64,6 +64,14 @@ public class CereopsisGoose extends JFrame implements Goose, WindowListener {
             e.printStackTrace();
         }
 
+
+        try {
+            connectToGaggle();
+        }
+        catch (Exception ex0) {
+            System.err.println("CereopsisGoose failed to connect to gaggle: " + ex0.getMessage());
+        }
+        
 
     }
 
@@ -104,8 +112,10 @@ public class CereopsisGoose extends JFrame implements Goose, WindowListener {
     }
 
     public void update(String[] gooseNames) throws RemoteException {
+        System.out.println("Update has been called with " + gooseNames.length + " geese in the gaggle");
         activeGooseNames = gooseNames;
-        producer.sendGooseList(gooseNames);
+        if (activeGooseNames != null)
+            producer.sendGooseList(activeGooseNames);
     }
 
     public void gotGooseNameRequest() {
@@ -120,6 +130,33 @@ public class CereopsisGoose extends JFrame implements Goose, WindowListener {
             e.printStackTrace();  
         }
     }
+
+    public void broadcastNetwork(Network network) {
+        try {
+            boss.broadcastNetwork(myGaggleName, "Boss", network);
+        } catch (RemoteException e) {
+            e.printStackTrace();
+        }
+    }
+
+
+    public void broadcastMatrix(DataMatrix matrix) {
+        try {
+            boss.broadcastMatrix(myGaggleName, "Boss", matrix);
+        } catch (RemoteException e) {
+            e.printStackTrace();
+        }
+    }
+
+
+    public void broadcastCluster(Cluster cluster) {
+        try {
+            boss.broadcastCluster(myGaggleName, "Boss", cluster);
+        } catch (RemoteException e) {
+            e.printStackTrace();
+        }
+    }
+
 
     public String getName() {
         return myGaggleName;

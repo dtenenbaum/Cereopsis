@@ -3,7 +3,12 @@ package org.systemsbiology.gaggle.cereopsis.core;
 import org.apache.activemq.spring.ActiveMQConnectionFactory;
 import org.apache.activemq.command.ActiveMQTextMessage;
 import org.systemsbiology.gaggle.cereopsis.goose.CereopsisGoose;
+import org.systemsbiology.gaggle.cereopsis.serialization.CompactNetworkToGaggleNetworkConverter;
+import org.systemsbiology.gaggle.cereopsis.serialization.CompactNetwork;
+import org.systemsbiology.gaggle.cereopsis.serialization.CompactNetworkSerializer;
+import org.systemsbiology.gaggle.cereopsis.serialization.SerializableDataMatrix;
 import org.systemsbiology.gaggle.core.datatypes.Namelist;
+import org.systemsbiology.gaggle.core.datatypes.Cluster;
 
 import javax.jms.*;
 
@@ -47,6 +52,7 @@ public class TopicListener implements MessageListener {
         try {
             if (textMessage.getStringProperty("MessageType") != null) {
                 System.out.println("its type is " + message.getStringProperty("MessageType"));
+                System.out.println("Message content:\n" + textMessage.getText());
                 JSONObject jsonObject = JSONObject.fromObject( textMessage.getText() );
                 handleMessage(textMessage.getStringProperty("MessageType"), jsonObject.toString());
 
@@ -63,6 +69,12 @@ public class TopicListener implements MessageListener {
             handleNamelist(message);
         } else if (messageType.equals("RequestGooseName")) {
             goose.gotGooseNameRequest();
+        }  else if (messageType.equals("Network")) {
+            handleNetwork(message);
+        } else if (messageType.equals("DataMatrix")) {
+            handleMatrix(message);
+        } else if (messageType.equals("Cluster")) {
+            handleCluster(message);
         }
     }
 
@@ -70,6 +82,24 @@ public class TopicListener implements MessageListener {
         JSONObject jsonObject = JSONObject.fromObject(message);
         Namelist namelist = (Namelist) JSONObject.toBean( jsonObject, Namelist.class );
         goose.broadcastNamelist(namelist);
+    }
+
+    protected void handleNetwork(String message) {
+        CompactNetwork cn = CompactNetworkSerializer.serializeFromJSON(message);
+        CompactNetworkToGaggleNetworkConverter converter = new CompactNetworkToGaggleNetworkConverter(cn);
+        goose.broadcastNetwork(converter.toGaggleNetwork());
+    }
+
+    protected void handleMatrix(String message) {
+        JSONObject bodyObject = JSONObject.fromObject(message);
+        SerializableDataMatrix m = (SerializableDataMatrix) JSONObject.toBean(bodyObject, SerializableDataMatrix.class);
+        goose.broadcastMatrix(m.toDataMatrix());
+    }
+
+    protected void handleCluster(String message) {
+        JSONObject bodyObject = JSONObject.fromObject(message);
+        Cluster c = (Cluster)JSONObject.toBean(bodyObject, Cluster.class);
+        goose.broadcastCluster(c);
     }
 
 

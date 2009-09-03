@@ -15,6 +15,9 @@ import javax.jms.*;
 import net.sf.json.JSONObject;
 import net.sf.json.JSONArray;
 
+import java.util.Map;
+import java.util.HashMap;
+
 /*
 * Copyright (C) 2009 by Institute for Systems Biology,
 * Seattle, Washington, USA.  All rights reserved.
@@ -82,11 +85,17 @@ public class GaggleProducer {
     }
 
     public void sendGooseList(String[] gooseNames) {
-        sendMessage("GooseList", JSONArray.fromObject(gooseNames).toString(), null);
+        System.out.println("gnl: " + gooseNames.length);
+        System.out.println("bwa:\n" + JSONArray.fromObject(gooseNames).toString());
+        Map<String,String[]> map = new HashMap<String, String[]>();
+        map.put("GooseList", gooseNames);
+        sendMessage("GooseList", JSONObject.fromObject(map).toString(), null);
     }
 
     public void sendGooseName(String gooseName, String[] gooseNames) {
-        sendGooseList(gooseNames);
-        sendMessage("GooseName", gooseName, null);
+        if (gooseNames != null)sendGooseList(gooseNames);
+        Map<String,String> map = new HashMap<String,String>();
+        map.put("GooseName", gooseName);
+        sendMessage("GooseName", JSONObject.fromObject(map).toString(), null);
     }
 }

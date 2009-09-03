@@ -25,20 +25,15 @@ public class GaggleBroker {
 
     }
 
-    public void startBroker() {
-        try {
-            broker.setUseJmx(true);
-            broker.addConnector("tcp://localhost:61616");
-            broker.addConnector("stomp://localhost:61613");
-            broker.start();
+    public void startBroker() throws Exception{
+        //broker.setUseJmx(true);
+        broker.addConnector("tcp://localhost:61616");
+        broker.addConnector("stomp://localhost:61613");
+        broker.start();
 
-            policyServer.start();
+        policyServer.start();
 
-            // todo add log4j and send log message that broker and policy server have started
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-
+        // todo add log4j and send log message that broker and policy server have started
     }
 
     public void stopBroker() {
@@ -52,7 +47,7 @@ public class GaggleBroker {
 
 
     public static void main(String[] args) {
-        new GaggleBroker().startBroker();
+        //new GaggleBroker().startBroker();
     }
 
 
