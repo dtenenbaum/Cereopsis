@@ -8,6 +8,7 @@ import org.systemsbiology.gaggle.geese.common.GooseShutdownHook;
 import org.systemsbiology.gaggle.util.MiscUtil;
 import org.systemsbiology.gaggle.cereopsis.core.GaggleBroker;
 import org.systemsbiology.gaggle.cereopsis.core.TopicListener;
+import org.systemsbiology.gaggle.cereopsis.core.GaggleProducer;
 
 import javax.swing.*;
 import javax.jms.JMSException;
@@ -30,6 +31,8 @@ public class CereopsisGoose extends JFrame implements Goose, WindowListener {
     String myGaggleName = "Cereopsis";
     Boss boss;
     GaggleBroker broker;
+    GaggleProducer producer;
+    String[] activeGooseNames;
 
     public CereopsisGoose() {
         super("Cereopsis Goose");
@@ -53,6 +56,8 @@ public class CereopsisGoose extends JFrame implements Goose, WindowListener {
         broker = new GaggleBroker();
         broker.startBroker();
         TopicListener topicListener = new TopicListener(this);
+        producer = new GaggleProducer();
+
         try {
             topicListener.run();
         } catch (JMSException e) {
@@ -76,10 +81,12 @@ public class CereopsisGoose extends JFrame implements Goose, WindowListener {
 
     public void handleNameList(String source, Namelist nameList) throws RemoteException {
         System.out.println("Received a Namelist from " + source);
+        producer.sendNamelist(nameList, source);
     }
 
     public void handleMatrix(String source, DataMatrix matrix) throws RemoteException {
         System.out.println("Received a DataMatrix from " + source);
+        producer.sendMatrix(matrix, source);
     }
 
     public void handleTuple(String source, GaggleTuple gaggleTuple) throws RemoteException {
@@ -88,14 +95,23 @@ public class CereopsisGoose extends JFrame implements Goose, WindowListener {
 
     public void handleCluster(String source, Cluster cluster) throws RemoteException {
         System.out.println("Received a Cluster from " + source);
+        producer.sendCluster(cluster, source);
     }
 
     public void handleNetwork(String source, Network network) throws RemoteException {
         System.out.println("Received a Network from " + source);
+        producer.sendNetwork(network, source);
     }
 
     public void update(String[] gooseNames) throws RemoteException {
+        activeGooseNames = gooseNames;
+        producer.sendGooseList(gooseNames);
     }
+
+    public void gotGooseNameRequest() {
+        producer.sendGooseName(myGaggleName, activeGooseNames);
+    }
+    
 
     public void broadcastNamelist(Namelist namelist) {
         try {
@@ -112,6 +128,7 @@ public class CereopsisGoose extends JFrame implements Goose, WindowListener {
     public void setName(String newName) {
         myGaggleName = newName;
         setTitle(myGaggleName);
+        producer.sendGooseName(myGaggleName, activeGooseNames);
     }
 
     public void doBroadcastList() throws RemoteException { // todo - remove
@@ -161,4 +178,5 @@ public class CereopsisGoose extends JFrame implements Goose, WindowListener {
         System.out.println("Starting Cereopsis goose...");
         new CereopsisGoose();
     }
+
 }

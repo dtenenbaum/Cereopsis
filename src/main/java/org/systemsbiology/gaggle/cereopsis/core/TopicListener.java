@@ -45,23 +45,10 @@ public class TopicListener implements MessageListener {
 
 
         try {
-            if (textMessage.getStringProperty("MessageType").equals("Namelist")) {
-                System.out.println("it's a namelist message!");
-                System.out.println("Text is: ");
-                System.out.println(textMessage.getText());
-
-                JSONArray jsonArray = JSONArray.fromObject(textMessage.getText());
-                String[] names = new String[jsonArray.size()];
-
-                Namelist namelist = new Namelist();
-
-                for(int i = 0; i < names.length; i++) {
-                    names[i] = jsonArray.getString(i);
-                }
-
-                namelist.setNames(names);
-                goose.broadcastNamelist(namelist);
-
+            if (textMessage.getStringProperty("MessageType") != null) {
+                System.out.println("its type is " + message.getStringProperty("MessageType"));
+                JSONObject jsonObject = JSONObject.fromObject( textMessage.getText() );
+                handleMessage(textMessage.getStringProperty("MessageType"), jsonObject.toString());
 
             }
         } catch (JMSException e) {
@@ -69,6 +56,22 @@ public class TopicListener implements MessageListener {
         }
 
     }
+
+
+    protected void handleMessage(String messageType, String message) {
+        if (messageType.equals("Namelist"))  {
+            handleNamelist(message);
+        } else if (messageType.equals("RequestGooseName")) {
+            goose.gotGooseNameRequest();
+        }
+    }
+
+    protected void handleNamelist(String message) {
+        JSONObject jsonObject = JSONObject.fromObject(message);
+        Namelist namelist = (Namelist) JSONObject.toBean( jsonObject, Namelist.class );
+        goose.broadcastNamelist(namelist);
+    }
+
 
 
     public void run() throws JMSException {
