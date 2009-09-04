@@ -1,0 +1,72 @@
+
+<html>
+    <head>
+    <title>Javascript Goose</title>
+    <style>
+        
+    body { 
+        margin: 0px;
+        overflow:hidden 
+    }
+
+    textarea {
+        font-size: 1em;
+    }
+    </style>
+    <script src="bridge/FABridge.js" ></script>
+    <script src="gaggle.js" ></script>
+
+</head>
+<body scroll='no' style="font-size:.9em;">
+    <div style="width:1024px">
+        <div style="margin-bottom: 20px;float:left;padding: 20px;">  
+		This goose is called: <i><div id="gooseName"></div></i><br/>
+		The list of geese is:<br/> 
+		<ul>
+		<div id="listOfGeese"></div>
+	    </ul>         
+	
+	<p>
+		Last Broadcast Received: <div id="lastBroadcastReceived">(None)</div>&nbsp;
+		<button onClick="clearLastBroadcastReceived();return false">Clear</button>
+		</p>
+	   
+	<button onClick="sendNamelistBroadcast();return false;">Broadcast Namelist</button> </br> 
+	<button onClick="sendClusterBroadcast();return false;">Broadcast Cluster</button> </br> 
+	<button onClick="sendMatrixBroadcast();return false;">Broadcast Matrix</button> </br> 
+	<button onClick="sendNetworkBroadcast();return false;">Broadcast Network</button> </br> 
+	<button disabled onClick="sendTupleBroadcast();return false;">Broadcast Tuple</button> </br> 
+		
+		
+<!--	
+            <button onClick="connect();return false;">execute</button>
+            Trace Output:<br />
+            <textarea id="output" cols="60" rows="10"></textarea>
+            <br />
+-->
+        </div>     
+
+
+
+<!-- flash stuff below  -->
+
+        <div style="visibility: hidden">
+            <noscript>
+                <object id='flexApp' classid='clsid:D27CDB6E-AE6D-11cf-96B8-444553540000' codebase='http://download.macromedia.com/pub/shockwave/cabs/flash/swflash.cab#version=8,5,0,0' height='0' width='0'>
+                    <param name='flashvars' value='bridgeName=example'/>
+                    <param name='src' value='EmptySwf.swf'/>
+                    <embed name='flexApp' pluginspage='http://www.macromedia.com/go/getflashplayer' src='EmptySwf.swf' height='0' width='0' flashvars='bridgeName=example'/>
+                </object>
+            </noscript>
+            <script language='javascript' charset='utf-8'>
+            document.write("<object id='flexApp' classid='clsid:D27CDB6E-AE6D-11cf-96B8-444553540000' codebase='http://download.macromedia.com/pub/shockwave/cabs/flash/swflash.cab#version=8,5,0,0' height='0' width='0'>");
+            document.write("<param name='flashvars' value='bridgeName=example'/>");
+            document.write("<param name='src' value='EmptySwf.swf'/>");
+            document.write("<embed name='flexApp' pluginspage='http://www.macromedia.com/go/getflashplayer' src='EmptySwf.swf' height='0' width='0' flashvars='bridgeName=example'/>");
+            document.write("</object>");
+          </script>
+            <br /><br />
+        </div>
+    </div>
+</body>
+</html>

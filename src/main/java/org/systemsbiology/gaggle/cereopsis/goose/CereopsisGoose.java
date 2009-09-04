@@ -88,34 +88,27 @@ public class CereopsisGoose extends JFrame implements Goose, WindowListener {
 
 
     public void handleNameList(String source, Namelist nameList) throws RemoteException {
-        System.out.println("Received a Namelist from " + source);
         producer.sendNamelist(nameList, source);
     }
 
     public void handleMatrix(String source, DataMatrix matrix) throws RemoteException {
-        System.out.println("Received a DataMatrix from " + source);
         producer.sendMatrix(matrix, source);
     }
 
     public void handleTuple(String source, GaggleTuple gaggleTuple) throws RemoteException {
-        System.out.println("Received a GaggleTuple from " + source);
     }
 
     public void handleCluster(String source, Cluster cluster) throws RemoteException {
-        System.out.println("Received a Cluster from " + source);
         producer.sendCluster(cluster, source);
     }
 
     public void handleNetwork(String source, Network network) throws RemoteException {
-        System.out.println("Received a Network from " + source);
         producer.sendNetwork(network, source);
     }
 
     public void update(String[] gooseNames) throws RemoteException {
-        System.out.println("Update has been called with " + gooseNames.length + " geese in the gaggle");
         activeGooseNames = gooseNames;
-        if (activeGooseNames != null)
-            producer.sendGooseList(activeGooseNames);
+        producer.sendGooseList(activeGooseNames);
     }
 
     public void gotGooseNameRequest() {
@@ -123,35 +116,51 @@ public class CereopsisGoose extends JFrame implements Goose, WindowListener {
     }
     
 
-    public void broadcastNamelist(Namelist namelist) {
+    public void broadcastNamelist(Namelist namelist, String target) {
         try {
-            boss.broadcastNamelist(myGaggleName, "Boss", namelist);
+            boss.broadcastNamelist(myGaggleName, target, namelist);
         } catch (RemoteException e) {
             e.printStackTrace();  
         }
     }
 
-    public void broadcastNetwork(Network network) {
+    public void broadcastNetwork(Network network, String target) {
         try {
-            boss.broadcastNetwork(myGaggleName, "Boss", network);
+            boss.broadcastNetwork(myGaggleName, target, network);
         } catch (RemoteException e) {
             e.printStackTrace();
         }
     }
 
 
-    public void broadcastMatrix(DataMatrix matrix) {
+    public void broadcastMatrix(DataMatrix matrix, String target) {
         try {
-            boss.broadcastMatrix(myGaggleName, "Boss", matrix);
+            boss.broadcastMatrix(myGaggleName, target, matrix);
         } catch (RemoteException e) {
             e.printStackTrace();
         }
     }
 
 
-    public void broadcastCluster(Cluster cluster) {
+    public void broadcastCluster(Cluster cluster, String target) {
         try {
-            boss.broadcastCluster(myGaggleName, "Boss", cluster);
+            boss.broadcastCluster(myGaggleName, target, cluster);
+        } catch (RemoteException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public void showGoose(String target) {
+        try {
+            boss.show(target);
+        } catch (RemoteException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public void hideGoose(String target) {
+        try {
+            boss.hide(target);
         } catch (RemoteException e) {
             e.printStackTrace();
         }
@@ -169,7 +178,6 @@ public class CereopsisGoose extends JFrame implements Goose, WindowListener {
     }
 
     public void doBroadcastList() throws RemoteException { // todo - remove
-        //To change body of implemented methods use File | Settings | File Templates.
     }
 
     public void doHide() {

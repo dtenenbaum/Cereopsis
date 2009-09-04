@@ -13,7 +13,6 @@ import org.systemsbiology.gaggle.core.datatypes.Cluster;
 import javax.jms.*;
 
 import net.sf.json.JSONObject;
-import net.sf.json.JSONArray;
 
 /*
 * Copyright (C) 2009 by Institute for Systems Biology,
@@ -26,10 +25,6 @@ import net.sf.json.JSONArray;
 public class TopicListener implements MessageListener {
 
 
-    private Connection connection;
-    private Session session;
-    private Topic topic;
-
     private CereopsisGoose goose;
 
 
@@ -40,21 +35,25 @@ public class TopicListener implements MessageListener {
     }
 
     public void onMessage(Message message) {
-        System.out.println("Got a message!");
+        //System.out.println("Got a message!");
 
         
 
-        System.out.println("its class is " + message.getClass().getName());
+        //System.out.println("its class is " + message.getClass().getName());
 
         ActiveMQTextMessage textMessage = (ActiveMQTextMessage) message;
 
 
         try {
             if (textMessage.getStringProperty("MessageType") != null) {
-                System.out.println("its type is " + message.getStringProperty("MessageType"));
-                System.out.println("Message content:\n" + textMessage.getText());
+                //System.out.println("its type is " + message.getStringProperty("MessageType"));
+                //System.out.println("Message content:\n" + textMessage.getText());
                 JSONObject jsonObject = JSONObject.fromObject( textMessage.getText() );
-                handleMessage(textMessage.getStringProperty("MessageType"), jsonObject.toString());
+                String target = "Boss";
+                if (message.getStringProperty("Target") != null) {
+                    target = message.getStringProperty("Target");
+                }
+                handleMessage(textMessage.getStringProperty("MessageType"), jsonObject.toString(), target);
 
             }
         } catch (JMSException e) {
@@ -64,51 +63,55 @@ public class TopicListener implements MessageListener {
     }
 
 
-    protected void handleMessage(String messageType, String message) {
+    protected void handleMessage(String messageType, String message, String target) {
         if (messageType.equals("Namelist"))  {
-            handleNamelist(message);
+            handleNamelist(message, target);
         } else if (messageType.equals("RequestGooseName")) {
             goose.gotGooseNameRequest();
         }  else if (messageType.equals("Network")) {
-            handleNetwork(message);
+            handleNetwork(message, target);
         } else if (messageType.equals("DataMatrix")) {
-            handleMatrix(message);
+            handleMatrix(message, target);
         } else if (messageType.equals("Cluster")) {
-            handleCluster(message);
+            handleCluster(message, target);
+        } else if (messageType.equals("Show")) {
+            goose.showGoose(target);
+        } else if (messageType.equals("Hide"))  {
+            goose.hideGoose(target);
         }
     }
 
-    protected void handleNamelist(String message) {
+    protected void handleNamelist(String message, String target) {
         JSONObject jsonObject = JSONObject.fromObject(message);
         Namelist namelist = (Namelist) JSONObject.toBean( jsonObject, Namelist.class );
-        goose.broadcastNamelist(namelist);
+        goose.broadcastNamelist(namelist, target);
     }
 
-    protected void handleNetwork(String message) {
+    protected void handleNetwork(String message, String target) {
         CompactNetwork cn = CompactNetworkSerializer.serializeFromJSON(message);
         CompactNetworkToGaggleNetworkConverter converter = new CompactNetworkToGaggleNetworkConverter(cn);
-        goose.broadcastNetwork(converter.toGaggleNetwork());
+        goose.broadcastNetwork(converter.toGaggleNetwork(),  target);
     }
 
-    protected void handleMatrix(String message) {
+    protected void handleMatrix(String message, String target) {
         JSONObject bodyObject = JSONObject.fromObject(message);
         SerializableDataMatrix m = (SerializableDataMatrix) JSONObject.toBean(bodyObject, SerializableDataMatrix.class);
-        goose.broadcastMatrix(m.toDataMatrix());
+        goose.broadcastMatrix(m.toDataMatrix(),  target);
     }
 
-    protected void handleCluster(String message) {
+    protected void handleCluster(String message, String target) {
         JSONObject bodyObject = JSONObject.fromObject(message);
         Cluster c = (Cluster)JSONObject.toBean(bodyObject, Cluster.class);
-        goose.broadcastCluster(c);
+        goose.broadcastCluster(c, target);
     }
 
 
 
     public void run() throws JMSException {
         ActiveMQConnectionFactory factory = new ActiveMQConnectionFactory();
-        connection = factory.createConnection();
-        session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
-        topic = session.createTopic("Broadcast");
+        Connection connection = factory.createConnection();
+        Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
+        Topic topic = session.createTopic("Broadcast");
 
         MessageConsumer consumer = session.createConsumer(topic);
         consumer.setMessageListener(this);

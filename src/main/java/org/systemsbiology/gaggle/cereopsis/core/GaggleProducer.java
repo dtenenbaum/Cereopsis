@@ -13,7 +13,6 @@ import org.systemsbiology.gaggle.cereopsis.serialization.SerializableDataMatrix;
 import javax.jms.*;
 
 import net.sf.json.JSONObject;
-import net.sf.json.JSONArray;
 
 import java.util.Map;
 import java.util.HashMap;
@@ -85,8 +84,6 @@ public class GaggleProducer {
     }
 
     public void sendGooseList(String[] gooseNames) {
-        System.out.println("gnl: " + gooseNames.length);
-        System.out.println("bwa:\n" + JSONArray.fromObject(gooseNames).toString());
         Map<String,String[]> map = new HashMap<String, String[]>();
         map.put("GooseList", gooseNames);
         sendMessage("GooseList", JSONObject.fromObject(map).toString(), null);

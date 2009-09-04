@@ -1,0 +1,79 @@
+<?xml version="1.0" ?>
+<!--
+		Ant Build file
+-->
+<project name="Cereopsis" default="all" basedir=".">
+
+	<!-- set global properties for this build -->
+	<property name="src.dir"       location="${basedir}/src/main/java"/>
+	<property name="lib.dir"       location="${basedir}/lib"/>
+	<property name="build.dir"     location="${basedir}/classes"/>
+	<property name="dist.dir"      location="${basedir}/dist"/>
+
+	<property name="app.name"      value="cereopsis"/>
+	<property name="jar.name"      value="${app.name}.jar"/>
+
+
+	<!-- Classpath -->
+	<path id="app.classpath">
+        <pathelement location="${build.dir}" />
+		<fileset dir="${lib.dir}">
+			<include name="**/*.jar"/>
+		</fileset>
+
+    </path>
+
+	<target name="clean" description="Remove previous artifacts">
+		<delete dir="${build.dir}" />
+		<mkdir dir="${build.dir}"/>
+	</target>
+
+	<target name="clean-dist" description="Remove previous jarfile artifacts">
+		<delete dir="${dist.dir}" />
+		<mkdir dir="${dist.dir}"/>
+	</target>
+
+	<target name="init" description="Get setup">
+		<!-- Create the time stamp -->
+		<tstamp>
+			<format property="timestamp" pattern="yyyy-MM-dd HH:mm:ss"/>
+		</tstamp>
+	</target>
+
+
+	<target name="compile" depends="init" description="compile the code">
+        <mkdir dir="${build.dir}"/>
+        <javac srcdir="${src.dir}" destdir="${build.dir}" debug="true" target="1.5">
+			<classpath refid="app.classpath" />
+		</javac>
+	</target>
+
+
+    <target name="run" depends="jar" description="run the goose">
+        <java classname="org.systemsbiology.gaggle.cereopsis.goose.CereopsisGoose"
+                classpathref="app.classpath" fork="true">
+        </java>
+    </target>
+
+
+
+
+    <target name="jar" depends="compile" description="builds jar containing everything">
+		<mkdir dir="${dist.dir}"/>
+		<jar jarfile="${dist.dir}/${jar.name}" index="true">
+			<manifest>
+				<attribute name="Built-By" value="${user.name}"/>
+				<attribute name="Built-On" value="${timestamp}" />
+				<attribute name="Main-Class" value="org.systemsbiology.gaggle.cereopsis.goose.CereopsisGoose" />
+			</manifest>
+			<fileset dir="${build.dir}" />
+		</jar>
+	</target>
+
+
+
+	<target name="all" depends="clean,init,compile,jar">
+	</target>
+
+</project>
+
